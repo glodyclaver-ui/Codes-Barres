@@ -1,0 +1,18 @@
+generateur_codebarre/
+├── app.py
+├── static/
+│   ├── css/
+│   │   └── style.css
+│   ├── js/
+│   │   └── main.js
+│   └── libs/
+│       └── ionicons/
+│           ├── css/
+│           │   └── ionicons.min.css   (ou ionicons.css)
+│           └── fonts/
+│               ├── ionicons.eot
+│               ├── ionicons.svg
+│               ├── ionicons.ttf
+│               └── ionicons.woff
+└── templates/
+    └── index.html

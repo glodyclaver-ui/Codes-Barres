@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BarCode Pro | Génération, Vérification & Traçabilité</title>
+    <!-- Ionicons v2.0.0 (100% Local) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='libs/ionicons/css/ionicons.min.css') }}">
+    <!-- Feuille de style personnalisée locale -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <!-- Barre de navigation supérieure -->
+    <header class="navbar">
+        <div class="nav-container">
+            <div class="brand">
+                <div class="brand-icon"><i class="ion-ios-barcode-outline"></i></div>
+                <div>
+                    <span class="brand-title">BarCode<span class="accent">Pro</span></span>
+                    <span class="brand-tag">Suite de Traçabilité Locale & Sécurisée</span>
+                </div>
+            </div>
+            <div class="nav-status">
+                <span class="status-dot"></span> Mode Local Sécurisé
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- En-tête de section -->
+        <section class="hero-header">
+            <h1>Générateur & Contrôleur de Codes-Barres</h1>
+            <p>Créez des identifiants normalisés haute précision, vérifiez les clés de contrôle et exportez vos étiquettes sans aucun transfert externe.</p>
+        </section>
+
+        <!-- Grille principale -->
+        <div class="dashboard-grid">
+            
+            <!-- Colonne Gauche : Configuration -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="step-badge">01</span>
+                    <h2>Paramètres du produit</h2>
+                </div>
+
+                <form id="barcode-form" onsubmit="event.preventDefault(); generateBarcode();">
+                    <div class="form-group">
+                        <label for="product_name">Désignation du produit</label>
+                        <div class="input-wrapper">
+                            <i class="ion-cube input-icon"></i>
+                            <input type="text" id="product_name" placeholder="Ex: Écran Dell UltraSharp 27&quot;" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="code_type">Norme / Standard</label>
+                            <select id="code_type" onchange="updatePlaceholder()">
+                                <option value="code128">Code 128 (Logistique / Interne)</option>
+                                <option value="ean13">EAN-13 (Distribution Europe/Afrique)</option>
+                                <option value="ean8">EAN-8 (Petits emballages)</option>
+                                <option value="upca">UPC-A (Standard Amérique du Nord)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="img_format">Format d'exportation</label>
+                            <select id="img_format">
+                                <option value="PNG">PNG (Sans perte)</option>
+                                <option value="JPG">JPG / JPEG (Universel)</option>
+                                <option value="WEBP">WebP (Ultra-léger)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="reference">Référence ou Code numérique</label>
+                        <div class="input-wrapper">
+                            <i class="ion-pricetag input-icon"></i>
+                            <input type="text" id="reference" placeholder="Ex: REF-2026-8841" required>
+                        </div>
+                        <small id="format-hint" class="helper-text">Accepte les lettres, chiffres et tirets (max 40 caractères).</small>
+                    </div>
+
+                    <label class="toggle-card">
+                        <input type="checkbox" id="optimize" checked>
+                        <div class="toggle-info">
+                            <strong>Compression intelligente</strong>
+                            <span>Réduit le poids du fichier (Ko) sans altérer la lecture laser.</span>
+                        </div>
+                    </label>
+
+                    <button type="submit" class="btn btn-primary" id="btn-generate">
+                        <i class="ion-flash"></i> Générer le code-barres
+                    </button>
+                </form>
+
+                <div id="gen_alert" class="alert"></div>
+            </div>
+
+            <!-- Colonne Droite : Aperçu & Contrôle -->
+            <div class="right-column">
+                <!-- Carte Résultat -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="step-badge">02</span>
+                        <h2>Aperçu & Téléchargement</h2>
+                    </div>
+
+                    <div class="preview-zone" id="preview_box">
+                        <div class="empty-state">
+                            <i class="ion-qr-scanner"></i>
+                            <p>Aucun code généré pour le moment</p>
+                            <span>Remplissez le formulaire à gauche pour visualiser l'étiquette.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Carte Vérification -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="step-badge badge-dark">03</span>
+                        <h2>Audit & Vérification d'intégrité</h2>
+                    </div>
+
+                    <div class="verify-box">
+                        <select id="verify_type" aria-label="Type de code">
+                            <option value="ean13">EAN-13</option>
+                            <option value="code128">Code 128</option>
+                            <option value="ean8">EAN-8</option>
+                            <option value="upca">UPC-A</option>
+                        </select>
+                        <input type="text" id="verify_code" placeholder="Entrez un code à contrôler...">
+                        <button type="button" onclick="verifyBarcode()" class="btn btn-secondary">
+                            <i class="ion-checkmark-circled"></i> Contrôler
+                        </button>
+                    </div>
+                    <div id="verify_alert" class="alert"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section Historique -->
+        <section class="card history-section">
+            <div class="card-header space-between">
+                <div class="header-left">
+                    <span class="step-badge badge-green"><i class="ion-clock"></i></span>
+                    <h2>Journal de traçabilité des codes</h2>
+                </div>
+                <span class="count-pill" id="history-count">{{ history|length }} enregistrement(s)</span>
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Horodatage</th>
+                            <th>Produit associé</th>
+                            <th>Norme</th>
+                            <th>Code complet</th>
+                            <th>Format & Poids</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history_body">
+                        {% for item in history %}
+                        <tr>
+                            <td class="text-muted">{{ item.date }}</td>
+                            <td><strong>{{ item.product }}</strong></td>
+                            <td><span class="norm-badge">{{ item.type }}</span></td>
+                            <td><code class="code-pill">{{ item.full_code }}</code></td>
+                            <td><span class="file-meta">{{ item.format }} • {{ item.size_kb }} Ko</span></td>
+                            <td>
+                                <button class="btn-icon" onclick="copyCode('{{ item.full_code }}')" title="Copier le code">
+                                    <i class="ion-ios-copy-outline"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="empty-table">Aucun historique disponible. Générez votre premier code-barres ci-dessus.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast">Code copié dans le presse-papiers !</div>
+
+    <!-- Script JavaScript local -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
